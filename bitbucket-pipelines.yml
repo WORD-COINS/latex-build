@@ -1,0 +1,12 @@
+pipelines:
+  branches:
+    master:
+      - step:
+          name: Build a Docker image and push the image
+          image: atlassian/default-image:latest
+          services:
+            - docker
+          script:
+            - echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin
+            - docker build -t wordcoins/latex-build
+            - docker push wordcoins/latex-build
