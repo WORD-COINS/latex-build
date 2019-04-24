@@ -17,6 +17,7 @@ ENV FONT_PATH /usr/share/fonts/
 
 ENV PERSISTENT_DEPS \
     wget \
+    curl \
     make \
     perl \
     ghostscript \
