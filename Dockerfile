@@ -71,7 +71,7 @@ RUN apk add --no-cache --virtual .texlive-deps $TEXLIVE_DEPS && \
       collection-fontsrecommended type1cm mdframed needspace newtx \
       fontaxes boondox everyhook svn-prov framed subfiles titlesec \\
       tocdata xpatch etoolbox l3packages \\
-      biblatex pbibtex-base bibtex logreq keyval ifthen url \\
+      biblatex pbibtex-base bibtex logreq keyval url \\
       ebgaramond && \
     apk del .texlive-deps
 
