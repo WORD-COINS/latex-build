@@ -70,7 +70,7 @@ RUN apk add --no-cache --virtual .texlive-deps $TEXLIVE_DEPS && \
     tlmgr install latexmk collection-luatex collection-langjapanese \
       collection-fontsrecommended type1cm mdframed needspace newtx \
       fontaxes boondox everyhook svn-prov framed subfiles titlesec \\
-      tocdata xpatch \\
+      tocdata xpatch etoolbox xparse \\
       ebgaramond && \
     apk del .texlive-deps
 
