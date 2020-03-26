@@ -71,7 +71,7 @@ RUN apk add --no-cache --virtual .texlive-deps $TEXLIVE_DEPS && \
       collection-fontsrecommended type1cm mdframed needspace newtx \
       fontaxes boondox everyhook svn-prov framed subfiles titlesec \\
       tocdata xpatch etoolbox l3packages \\
-      biblatex pbibtex-base logreq biber import tcolorbox \\
+      biblatex pbibtex-base logreq biber import environ tcolorbox \\
       ebgaramond && \
     apk del .texlive-deps
 
