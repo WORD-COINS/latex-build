@@ -1,19 +1,15 @@
-FROM frolvlad/alpine-glibc:alpine-3.7
-
-MAINTAINER yyu <yyu [at] mental.poker>
+FROM alpine:3.11
+# WORD内部向けコンテナなので、何か問題が有ったらSlack上で通知して下さい。
+MAINTAINER rizaudo <rizaudo@users.noreply.github.com>
 
 ENV TEXLIVE_DEPS \
     xz \
     tar \
     fontconfig-dev
-    
-ENV TEXLIVE_PATH /usr/local/texlive
 
 ENV FONT_DEPS \
     unzip \
     fontconfig-dev
-
-ENV FONT_PATH /usr/share/fonts/
 
 ENV PERSISTENT_DEPS \
     wget \
@@ -24,39 +20,34 @@ ENV PERSISTENT_DEPS \
     bash \
     git
 
+ENV TEXLIVE_PATH /usr/local/texlive
 ENV PATH $TEXLIVE_PATH/bin/x86_64-linuxmusl:$PATH
 
-RUN apk upgrade --update
 
-# Install basic dependencies
-RUN apk add --no-cache --virtual .persistent-deps $PERSISTENT_DEPS
+# キャッシュ修正とパッケージインストールは同時にやる必要がある
+RUN apk upgrade --update-cache && \
+    apk add --no-cache tzdata && \
+    apk add --no-cache --virtual .texlive-deps $TEXLIVE_DEPS && \
+    apk add --no-cache --virtual .persistent-deps $PERSISTENT_DEPS && \
+    apk add --no-cache --virtual .font-deps $FONT_DEPS
 
-# Setup fonts
+ENV FONT_URLS \
+    https://github.com/adobe-fonts/source-code-pro/archive/2.030R-ro/1.050R-it.zip \
+    https://github.com/adobe-fonts/source-han-sans/raw/release/SubsetOTF/SourceHanSansJP.zip \
+    https://github.com/adobe-fonts/source-han-serif/raw/release/SubsetOTF/SourceHanSerifJP.zip 
+ENV FONT_PATH /usr/share/fonts/
 RUN mkdir -p $FONT_PATH && \
-    apk add --no-cache --virtual .font-deps $FONT_DEPS && \
-    wget https://github.com/adobe-fonts/source-code-pro/archive/2.030R-ro/1.050R-it.zip && \
-      unzip 1.050R-it.zip && \
-      cp source-code-pro-2.030R-ro-1.050R-it/OTF/*.otf $FONT_PATH && \
-      rm -rf 1.050R-it.zip source-code-pro-2.030R-ro-1.050R-it && \
-    wget https://github.com/adobe-fonts/source-han-sans/raw/release/SubsetOTF/SourceHanSansJP.zip && \
-      unzip SourceHanSansJP.zip && \
-      cp SourceHanSansJP/*.otf $FONT_PATH && \
-      rm -rf SourceHanSansJP.zip SourceHanSansJP && \
-    wget https://github.com/adobe-fonts/source-han-serif/raw/release/SubsetOTF/SourceHanSerifJP.zip && \
-      unzip SourceHanSerifJP.zip && \
-      cp SourceHanSerifJP/*.otf $FONT_PATH && \
-      rm -rf SourceHanSerifJP.zip SourceHanSerifJP && \
-    fc-cache -f -v && \
-    apk del .font-deps
+      wget $FONT_URLS && \
+      unzip -j "*.zip" "*.otf" -d $FONT_PATH && \
+      rm *.zip && \
+      fc-cache -f -v && \
+      apk del .font-deps
 
-# Set timezone to Tokyo
-RUN apk --no-cache add tzdata && \
-    cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
+RUN cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     echo 'Asia/Tokyo' > /etc/timezone
 
 # Install TeXLive
-RUN apk add --no-cache --virtual .texlive-deps $TEXLIVE_DEPS && \
-    mkdir /tmp/install-tl-unx && \
+RUN mkdir -p /tmp/install-tl-unx && \
     wget -qO- http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz | \
       tar -xz -C /tmp/install-tl-unx --strip-components=1 && \
     printf "%s\n" \
@@ -64,19 +55,23 @@ RUN apk add --no-cache --virtual .texlive-deps $TEXLIVE_DEPS && \
       "selected_scheme scheme-small" \
       "option_doc 0" \
       "option_src 0" \
+      "option_autobackup 0" \
       > /tmp/install-tl-unx/texlive.profile && \
     /tmp/install-tl-unx/install-tl \
-      -profile /tmp/install-tl-unx/texlive.profile && \
-    tlmgr install latexmk collection-luatex collection-langjapanese \
+      -profile /tmp/install-tl-unx/texlive.profile
+
+# tlmgr section
+RUN tlmgr install --no-persistent-downloads \
+      latexmk collection-luatex collection-langjapanese \
       collection-fontsrecommended type1cm mdframed needspace newtx \
-      fontaxes boondox everyhook svn-prov framed subfiles titlesec \\
-      tocdata xpatch etoolbox l3packages \\
-      biblatex pbibtex-base logreq biber import environ trimspaces tcolorbox \\
+      fontaxes boondox everyhook svn-prov framed subfiles titlesec \
+      tocdata xpatch etoolbox l3packages \
+      biblatex pbibtex-base logreq biber import environ trimspaces tcolorbox \
       ebgaramond && \
     apk del .texlive-deps
 
-VOLUME ["/workdir"]
+VOLUME ["/tmp/workdir"]
 
-WORKDIR /workdir
+WORKDIR /tmp/workdir
 
 CMD ["/bin/bash", "-c", "make"]
