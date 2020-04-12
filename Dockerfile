@@ -70,8 +70,8 @@ RUN tlmgr install --no-persistent-downloads \
       ebgaramond && \
     apk del .texlive-deps
 
-VOLUME ["/tmp/workdir"]
+VOLUME ["/workdir"]
 
-WORKDIR /tmp/workdir
+WORKDIR /workdir
 
 CMD ["/bin/bash", "-c", "make"]
