@@ -67,7 +67,7 @@ RUN tlmgr install --no-persistent-downloads \
       fontaxes boondox everyhook svn-prov framed subfiles titlesec \
       tocdata xpatch etoolbox l3packages \
       biblatex pbibtex-base logreq biber import environ trimspaces tcolorbox \
-      ebgaramond && \
+      ebgaramond algorithms && \
     apk del .texlive-deps
 
 VOLUME ["/workdir"]
