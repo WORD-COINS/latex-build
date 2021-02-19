@@ -61,13 +61,16 @@ RUN mkdir -p /tmp/install-tl-unx && \
       -profile /tmp/install-tl-unx/texlive.profile
 
 # tlmgr section
+RUN tlmgr update --self
+
+# package install
 RUN tlmgr install --no-persistent-downloads \
       latexmk collection-luatex collection-langjapanese \
       collection-fontsrecommended type1cm mdframed needspace newtx \
       fontaxes boondox everyhook svn-prov framed subfiles titlesec \
       tocdata xpatch etoolbox l3packages \
       biblatex pbibtex-base logreq biber import environ trimspaces tcolorbox \
-      ebgaramond algorithms algorithmicx xstring && \
+      ebgaramond algorithms algorithmicx xstring siunitx && \
     apk del .texlive-deps
 
 VOLUME ["/workdir"]
