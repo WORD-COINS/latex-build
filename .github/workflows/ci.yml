@@ -1,0 +1,22 @@
+on: push
+
+name: CI
+
+jobs:
+  build-image:
+    name: Build and push image
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build the image
+        run: docker build . -t latex-build
+      - name: Tag the image
+        run: |
+          docker tag latex-build "ghcr.io/word-coins/latex-build:$GITHUB_SHA"
+          docker tag latex-build "ghcr.io/word-coins/latex-build:${GITHUB_REF#refs/heads/}"
+      - name: Login to the registry
+        run: |
+          echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io/word-coins/latex-build \
+            -u '${{ github.actor }}' --password-stdin
+      - name: Push the image
+        run: docker push --all-tags ghcr.io/word-coins/latex-build
