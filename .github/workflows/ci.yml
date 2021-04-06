@@ -14,6 +14,9 @@ jobs:
         run: |
           docker tag latex-build "ghcr.io/word-coins/latex-build:$GITHUB_SHA"
           docker tag latex-build "ghcr.io/word-coins/latex-build:${GITHUB_REF#refs/heads/}"
+      - name: Tag the image (latest)
+        run: docker tag latex-build "ghcr.io/word-coins/latex-build:latest"
+        if: github.ref == 'refs/heads/master'
       - name: Login to the registry
         run: |
           echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io/word-coins/latex-build \
