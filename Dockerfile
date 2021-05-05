@@ -33,7 +33,7 @@ RUN apk upgrade --update-cache && \
 
 ENV FONT_URLS \
     https://github.com/adobe-fonts/source-code-pro/archive/2.030R-ro/1.050R-it.zip \
-    https://github.com/adobe-fonts/source-han-sans/raw/release/SubsetOTF/SourceHanSansJP.zip \
+    https://github.com/adobe-fonts/source-han-sans/releases/latest/download/SourceHanSansJP.zip \
     https://github.com/adobe-fonts/source-han-serif/raw/release/SubsetOTF/SourceHanSerifJP.zip 
 ENV FONT_PATH /usr/share/fonts/
 RUN mkdir -p $FONT_PATH && \
