@@ -23,7 +23,7 @@ ENV PERSISTENT_DEPS \
 ENV TEXLIVE_PATH /usr/local/texlive
 ENV PATH $TEXLIVE_PATH/bin/x86_64-linuxmusl:$PATH
 
-ENV GLIBC_VER=2.31-r0
+ENV GLIBC_VER=2.35-r0
 
 # キャッシュ修正とパッケージインストールは同時にやる必要がある
 RUN apk upgrade --update-cache && \
