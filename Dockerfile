@@ -40,7 +40,8 @@ RUN apk upgrade --update-cache && \
     # install aws-cli
     curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip && \
     unzip -q awscliv2.zip && \
-    aws/install
+    aws/install && \
+    rm awscli.zip
 
 ENV FONT_URLS \
     https://github.com/adobe-fonts/source-code-pro/archive/2.030R-ro/1.050R-it.zip \
