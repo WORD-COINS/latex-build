@@ -20,10 +20,12 @@ jobs:
             type=ref,event=branch
             type=sha
 
-      - name: Login to the registry
-        run: |
-          echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io/word-coins/latex-build \
-            -u '${{ github.actor }}' --password-stdin
+      - name: Login to ghcr.io
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and Push
         uses: docker/build-push-action@v2
