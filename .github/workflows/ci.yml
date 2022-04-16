@@ -8,18 +8,27 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - name: Build the image
-        run: docker build . -t latex-build
-      - name: Tag the image
-        run: |
-          docker tag latex-build "ghcr.io/word-coins/latex-build:$GITHUB_SHA"
-          docker tag latex-build "ghcr.io/word-coins/latex-build:${GITHUB_REF#refs/heads/}"
-      - name: Tag the image (latest)
-        run: docker tag latex-build "ghcr.io/word-coins/latex-build:latest"
-        if: github.ref == 'refs/heads/master'
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=auto
+          tags: |
+            type=ref,event=branch
+            type=sha
+
       - name: Login to the registry
         run: |
           echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io/word-coins/latex-build \
             -u '${{ github.actor }}' --password-stdin
-      - name: Push the image
-        run: docker push --all-tags ghcr.io/word-coins/latex-build
+
+      - name: Build and Push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
