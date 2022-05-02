@@ -69,7 +69,7 @@ RUN tlmgr install --no-persistent-downloads \
       fontaxes boondox everyhook svn-prov framed subfiles titlesec \
       tocdata xpatch etoolbox l3packages \
       biblatex pbibtex-base logreq biber import environ trimspaces tcolorbox \
-      ebgaramond algorithms algorithmicx xstring siunitx
+      ebgaramond algorithms algorithmicx xstring siunitx bussproofs
 
 # EBGaramond
 RUN cp /usr/share/fonts/opentype/ebgaramond/EBGaramond12-Regular.otf /usr/share/fonts/opentype/EBGaramond.otf && \
