@@ -17,9 +17,6 @@ ENV PERSISTENT_DEPS \
     less \
     fonts-ebgaramond
 
-ENV TEXLIVE_PATH /usr/local/texlive
-ENV PATH $TEXLIVE_PATH/bin/x86_64-linux:$PATH
-
 # キャッシュ修正とパッケージインストールは同時にやる必要がある
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -46,6 +43,7 @@ RUN cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     echo 'Asia/Tokyo' > /etc/timezone
 
 # Install TeXLive
+ENV TEXLIVE_PATH /usr/local/texlive
 RUN mkdir -p /tmp/install-tl-unx && \
     wget -qO- http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz | \
       tar -xz -C /tmp/install-tl-unx --strip-components=1 && \
@@ -58,6 +56,8 @@ RUN mkdir -p /tmp/install-tl-unx && \
       > /tmp/install-tl-unx/texlive.profile && \
     /tmp/install-tl-unx/install-tl \
       -profile /tmp/install-tl-unx/texlive.profile
+
+ENV PATH $TEXLIVE_PATH/bin/x86_64-linux:$TEXLIVE_PATH/bin/aarch64-linux:$PATH
 
 # tlmgr section
 RUN tlmgr update --self
@@ -75,6 +75,16 @@ RUN tlmgr install --no-persistent-downloads \
 RUN cp /usr/share/fonts/opentype/ebgaramond/EBGaramond12-Regular.otf /usr/share/fonts/opentype/EBGaramond.otf && \
     fc-cache -frvv && \
     luaotfload-tool --update
+
+ARG TARGETARCH
+
+# Install Pandoc
+ENV PANDOC_VERSION 3.1.2
+ENV PANDOC_DOWNLOAD_URL https://github.com/jgm/pandoc/releases/download/$PANDOC_VERSION/pandoc-$PANDOC_VERSION-linux-$TARGETARCH.tar.gz
+ENV PANDOC_ROOT /usr/local/bin/pandoc
+RUN wget -qO- "$PANDOC_DOWNLOAD_URL" | tar -xzf - && \
+    cp pandoc-$PANDOC_VERSION/bin/pandoc $PANDOC_ROOT && \
+    rm -Rf pandoc-$PANDOC_VERSION/
 
 VOLUME ["/workdir"]
 
