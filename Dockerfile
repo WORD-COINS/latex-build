@@ -79,7 +79,7 @@ RUN cp /usr/share/fonts/opentype/ebgaramond/EBGaramond12-Regular.otf /usr/share/
 ARG TARGETARCH
 
 # Install Pandoc
-ENV PANDOC_VERSION 3.1.2
+ENV PANDOC_VERSION 3.2.1
 ENV PANDOC_DOWNLOAD_URL https://github.com/jgm/pandoc/releases/download/$PANDOC_VERSION/pandoc-$PANDOC_VERSION-linux-$TARGETARCH.tar.gz
 ENV PANDOC_ROOT /usr/local/bin/pandoc
 RUN wget -qO- "$PANDOC_DOWNLOAD_URL" | tar -xzf - && \
