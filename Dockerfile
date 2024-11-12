@@ -12,7 +12,7 @@ ENV TEX_LIVE_ARCH x86_64-linux
 FROM build-${TARGETARCH}
 
 # WORD内部向けコンテナなので、何か問題が有ったらSlack上で通知して下さい。
-LABEL maintainer="Totsugekitai <37617413+Totsugekitai@users.noreply.github.com>"
+LABEL maintainer "Totsugekitai <37617413+Totsugekitai@users.noreply.github.com>"
 
 ENV PERSISTENT_DEPS \
     tar \
