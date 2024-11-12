@@ -57,13 +57,10 @@ RUN cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
 
 # ENV PATH $TEXLIVE_PATH/bin/x86_64-linux:$TEXLIVE_PATH/bin/aarch64-linux:$PATH
 
-COPY --from=registry.gitlab.com/islandoftex/images/texlive:TL2024-2024-11-10-small /usr/local/texlive /usr/local/texlive
+COPY --from=registry.gitlab.com/islandoftex/images/texlive:small /usr/local/texlive /usr/local/texlive
 
 RUN echo "Set PATH to $PATH" && \
     $(find /usr/local/texlive -name tlmgr) path add
-
-ENV TEX_LIVE_VERSION="2024"
-ENV PATH="/usr/local/texlive/$TEX_LIVE_VERSION/bin/$TEX_LIVE_ARCH:$PATH"
 
 # tlmgr section
 RUN tlmgr update --self
@@ -75,7 +72,8 @@ RUN tlmgr install --no-persistent-downloads \
       fontaxes boondox everyhook svn-prov framed subfiles titlesec \
       tocdata xpatch etoolbox l3packages \
       biblatex pbibtex-base logreq biber import environ trimspaces tcolorbox \
-      ebgaramond algorithms algorithmicx xstring siunitx bussproofs enumitem
+      ebgaramond algorithms algorithmicx xstring siunitx bussproofs enumitem && \
+    tlmgr path add
 
 # EBGaramond
 RUN cp /usr/share/fonts/opentype/ebgaramond/EBGaramond12-Regular.otf "/usr/share/fonts/opentype/EB Garamond.otf" && \
