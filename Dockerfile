@@ -9,6 +9,8 @@ FROM base AS build-amd64
 ENV AWS_CLI_ARCH linux-x86_64
 ENV TEX_LIVE_ARCH x86_64-linux
 
+FROM build-${TARGETARCH}
+
 # WORD内部向けコンテナなので、何か問題が有ったらSlack上で通知して下さい。
 LABEL maintainer="Totsugekitai <37617413+Totsugekitai@users.noreply.github.com>"
 
