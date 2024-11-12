@@ -28,8 +28,8 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-$AWS_CLI_ARCH.zip" -o "awscliv
     rm -r ./aws awscliv2.zip
 
 ENV FONT_URLS="https://github.com/adobe-fonts/source-code-pro/archive/2.030R-ro/1.050R-it.zip \
-    https://github.com/adobe-fonts/source-han-sans/releases/latest/download/SourceHanSansJP.zip \
-    https://github.com/adobe-fonts/source-han-serif/raw/release/SubsetOTF/SourceHanSerifJP.zip"
+      https://github.com/adobe-fonts/source-han-sans/releases/latest/download/SourceHanSansJP.zip \
+      https://github.com/adobe-fonts/source-han-serif/raw/release/SubsetOTF/SourceHanSerifJP.zip"
 ENV FONT_PATH="/usr/share/fonts/"
 RUN mkdir -p $FONT_PATH && \
     wget $FONT_URLS && \
