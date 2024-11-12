@@ -8,7 +8,7 @@ FROM base AS build-amd64
 ENV PLATFORM x86_64-linux
 
 # WORD内部向けコンテナなので、何か問題が有ったらSlack上で通知して下さい。
-LABEL MAINTAINER="Totsugekitai <37617413+Totsugekitai@users.noreply.github.com>"
+LABEL maintainer="Totsugekitai <37617413+Totsugekitai@users.noreply.github.com>"
 
 ENV PERSISTENT_DEPS \
     tar \
