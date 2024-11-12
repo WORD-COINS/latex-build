@@ -1,6 +1,14 @@
-FROM debian:stable-20220316-slim
+FROM ubuntu:noble AS base
+ARG TARGETARCH
+
+FROM base AS build-arm64
+ENV PLATFORM aarch64-linux
+
+FROM base AS build-amd64
+ENV PLATFORM x86_64-linux
+
 # WORD内部向けコンテナなので、何か問題が有ったらSlack上で通知して下さい。
-MAINTAINER Totsugekitai <37617413+Totsugekitai@users.noreply.github.com>
+LABEL MAINTAINER="Totsugekitai <37617413+Totsugekitai@users.noreply.github.com>"
 
 ENV PERSISTENT_DEPS \
     tar \
@@ -43,21 +51,29 @@ RUN cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     echo 'Asia/Tokyo' > /etc/timezone
 
 # Install TeXLive
-ENV TEXLIVE_PATH /usr/local/texlive
-RUN mkdir -p /tmp/install-tl-unx && \
-    wget -qO- http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz | \
-      tar -xz -C /tmp/install-tl-unx --strip-components=1 && \
-    printf "%s\n" \
-      "TEXDIR $TEXLIVE_PATH" \
-      "selected_scheme scheme-small" \
-      "option_doc 0" \
-      "option_src 0" \
-      "option_autobackup 0" \
-      > /tmp/install-tl-unx/texlive.profile && \
-    /tmp/install-tl-unx/install-tl \
-      -profile /tmp/install-tl-unx/texlive.profile
+# ENV TEXLIVE_PATH /usr/local/texlive
+# RUN mkdir -p /tmp/install-tl-unx && \
+#     wget -qO- http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz | \
+#       tar -xz -C /tmp/install-tl-unx --strip-components=1 && \
+#     printf "%s\n" \
+#       "TEXDIR $TEXLIVE_PATH" \
+#       "selected_scheme scheme-small" \
+#       "option_doc 0" \
+#       "option_src 0" \
+#       "option_autobackup 0" \
+#       > /tmp/install-tl-unx/texlive.profile && \
+#     /tmp/install-tl-unx/install-tl \
+#       -profile /tmp/install-tl-unx/texlive.profile
 
-ENV PATH $TEXLIVE_PATH/bin/x86_64-linux:$TEXLIVE_PATH/bin/aarch64-linux:$PATH
+# ENV PATH $TEXLIVE_PATH/bin/x86_64-linux:$TEXLIVE_PATH/bin/aarch64-linux:$PATH
+
+COPY --from=registry.gitlab.com/islandoftex/images/texlive:TL2024-2024-11-10-small /usr/local/texlive /usr/local/texlive
+
+RUN echo "Set PATH to $PATH" && \
+    $(find /usr/local/texlive -name tlmgr) path add
+
+ENV TEX_LIVE_VERSION 2024
+ENV PATH /usr/local/texlive/$TEX_LIVE_VERSION/bin/$PLATFORM:$PATH
 
 # tlmgr section
 RUN tlmgr update --self
@@ -72,14 +88,12 @@ RUN tlmgr install --no-persistent-downloads \
       ebgaramond algorithms algorithmicx xstring siunitx bussproofs enumitem
 
 # EBGaramond
-RUN cp /usr/share/fonts/opentype/ebgaramond/EBGaramond12-Regular.otf /usr/share/fonts/opentype/EBGaramond.otf && \
+RUN cp /usr/share/fonts/opentype/ebgaramond/EBGaramond12-Regular.otf "/usr/share/fonts/opentype/EB Garamond.otf" && \
     fc-cache -frvv && \
     luaotfload-tool --update
 
-ARG TARGETARCH
-
 # Install Pandoc
-ENV PANDOC_VERSION 3.2.1
+ENV PANDOC_VERSION 3.5
 ENV PANDOC_DOWNLOAD_URL https://github.com/jgm/pandoc/releases/download/$PANDOC_VERSION/pandoc-$PANDOC_VERSION-linux-$TARGETARCH.tar.gz
 ENV PANDOC_ROOT /usr/local/bin/pandoc
 RUN wget -qO- "$PANDOC_DOWNLOAD_URL" | tar -xzf - && \
