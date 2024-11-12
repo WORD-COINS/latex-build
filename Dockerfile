@@ -2,10 +2,12 @@ FROM ubuntu:noble AS base
 ARG TARGETARCH
 
 FROM base AS build-arm64
-ENV PLATFORM aarch64-linux
+ENV AWS_CLI_ARCH linux-aarch64
+ENV TEX_LIVE_ARCH aarch64-linux
 
 FROM base AS build-amd64
-ENV PLATFORM x86_64-linux
+ENV AWS_CLI_ARCH linux-x86_64
+ENV TEX_LIVE_ARCH x86_64-linux
 
 # WORD内部向けコンテナなので、何か問題が有ったらSlack上で通知して下さい。
 LABEL maintainer="Totsugekitai <37617413+Totsugekitai@users.noreply.github.com>"
@@ -31,7 +33,7 @@ RUN apt-get update && \
     tzdata $PERSISTENT_DEPS
 
 # install awscliv2
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+RUN curl "https://awscli.amazonaws.com/awscli-exe-$AWS_CLI_ARCH.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
     ./aws/install && \
     rm -r ./aws awscliv2.zip
@@ -73,7 +75,7 @@ RUN echo "Set PATH to $PATH" && \
     $(find /usr/local/texlive -name tlmgr) path add
 
 ENV TEX_LIVE_VERSION 2024
-ENV PATH /usr/local/texlive/$TEX_LIVE_VERSION/bin/$PLATFORM:$PATH
+ENV PATH /usr/local/texlive/$TEX_LIVE_VERSION/bin/$TEX_LIVE_ARCH:$PATH
 
 # tlmgr section
 RUN tlmgr update --self
