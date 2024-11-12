@@ -32,10 +32,10 @@ ENV FONT_URLS="https://github.com/adobe-fonts/source-code-pro/archive/2.030R-ro/
     https://github.com/adobe-fonts/source-han-serif/raw/release/SubsetOTF/SourceHanSerifJP.zip"
 ENV FONT_PATH="/usr/share/fonts/"
 RUN mkdir -p $FONT_PATH && \
-      wget $FONT_URLS && \
-      unzip -j "*.zip" "*.otf" -d $FONT_PATH && \
-      rm *.zip && \
-      fc-cache -f -v
+    wget $FONT_URLS && \
+    unzip -j "*.zip" "*.otf" -d $FONT_PATH && \
+    rm *.zip && \
+    fc-cache -f -v
 
 RUN cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
     echo 'Asia/Tokyo' > /etc/timezone
@@ -57,7 +57,7 @@ RUN cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
 
 # ENV PATH $TEXLIVE_PATH/bin/x86_64-linux:$TEXLIVE_PATH/bin/aarch64-linux:$PATH
 
-COPY --from=registry.gitlab.com/islandoftex/images/texlive:small /usr/local/texlive /usr/local/texlive
+COPY --from=registry.gitlab.com/islandoftex/images/texlive:latest-small /usr/local/texlive /usr/local/texlive
 
 RUN echo "Set PATH to $PATH" && \
     $(find /usr/local/texlive -name tlmgr) path add
