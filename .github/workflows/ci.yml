@@ -54,8 +54,8 @@ jobs:
           echo "CURRENT_TIME=$(date "+%Y-%m-%d-%H%M%S")" >> $GITHUB_ENV
 
       - name: Package Cache
-        id: cache-primes-restore
-        uses: actions/cache/restore@v4
+        id: cache
+        uses: actions/cache@v4
         with:
           key: cache-pkgs-${{ env.PLATFORM_PAIR }}-${{ env.CURRENT_TIME }}
           restore-keys: cache-pkgs-${{ env.PLATFORM_PAIR }}-
