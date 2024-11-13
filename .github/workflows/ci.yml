@@ -53,11 +53,20 @@ jobs:
         run: |
           echo "CURRENT_TIME=$(TZ=Asia/Tokyo date "+%Y-%m-%d-%H%M%S")" >> $GITHUB_ENV
 
+      - name: Get latest cache key
+        id: cache-key
+        run: |
+          echo "LATEST_CACHE_KEY=$(gh cache list --key cache-pkgs-${{ env.PLATFORM_PAIR }}- --json key,sizeInBytes,createdAt --jq '.[] | select(.sizeInBytes >= 100*1024*1024) | .key' | head -n 1 | awk '{print $1}') >> $GITHUB_ENV
+
+      - name: latest cache key echo
+        run: |
+          echo $LATEST_CACHE_KEY
+
       - name: Package Cache
         id: cache
         uses: actions/cache@v4
         with:
-          key: cache-pkgs-${{ env.PLATFORM_PAIR }}-${{ env.CURRENT_TIME }}
+          key: ${{ env.LATEST_CACHE_KEY }}
           restore-keys: cache-pkgs-${{ env.PLATFORM_PAIR }}-
           path: |
             tlmgr-pkgs
