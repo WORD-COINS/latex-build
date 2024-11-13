@@ -65,14 +65,19 @@ RUN echo "Set PATH to $PATH" && \
 # tlmgr section
 RUN tlmgr update --self
 
+# cacheされたディレクトリはイメージに焼き付けられないため、最終生成物はキャッシュ外にコピーする
 # package install
-RUN tlmgr install --no-persistent-downloads \
+RUN --mount=type=cache,target=/tlmgr-pkgs,sharing=locked \
+    tlmgr restore --force --backupdir /tlmgr-pkgs --all || true && \
+    tlmgr install --no-persistent-downloads \
       latexmk collection-luatex collection-langjapanese \
       collection-fontsrecommended type1cm mdframed needspace newtx \
       fontaxes boondox everyhook svn-prov framed subfiles titlesec \
       tocdata xpatch etoolbox l3packages \
       biblatex pbibtex-base logreq biber import environ trimspaces tcolorbox \
       ebgaramond algorithms algorithmicx xstring siunitx bussproofs enumitem && \
+    tlmgr backup --clean --backupdir /tlmgr-pkgs --all && \
+    tlmgr backup --backupdir /tlmgr-pkgs --all && \
     tlmgr path add
 
 # EBGaramond

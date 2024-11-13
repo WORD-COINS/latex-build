@@ -60,6 +60,24 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: tlmgr-pkgs Cache
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: |
+            tlmgr-pkgs
+          key: cache-${{ hashFiles('Dockerfile') }}-${{ env.PLATFORM_PAIR }}
+
+      - name: inject cache into docker
+        # v3.1.2のcommitを指定
+        uses: reproducible-containers/buildkit-cache-dance@5b6db76d1da5c8b307d5d2e0706d266521b710de
+        with:
+          cache-map: |
+            {
+              "tlmgr-pkgs": "/tlmgr-pkgs"
+            }
+          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
+
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@v6
