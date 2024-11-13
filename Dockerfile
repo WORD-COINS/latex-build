@@ -14,12 +14,14 @@ FROM build-${TARGETARCH}
 # WORD内部向けコンテナなので、何か問題が有ったらSlack上で通知して下さい。
 LABEL maintainer="Totsugekitai <37617413+Totsugekitai@users.noreply.github.com>"
 
-ENV PERSISTENT_DEPS="tar fontconfig unzip wget curl make perl ghostscript bash git groff less fonts-ebgaramond"
+ENV PERSISTENT_DEPS="tzdata tar fontconfig unzip wget curl make perl ghostscript bash git groff less fonts-ebgaramond"
 
 # キャッシュ修正とパッケージインストールは同時にやる必要がある
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    tzdata $PERSISTENT_DEPS
+    $PERSISTENT_DEPS && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # install awscliv2
 RUN curl "https://awscli.amazonaws.com/awscli-exe-$AWS_CLI_ARCH.zip" -o "awscliv2.zip" && \
@@ -65,7 +67,7 @@ RUN echo "Set PATH to $PATH" && \
 # tlmgr section
 RUN tlmgr update --self
 
-# cacheされたディレクトリはイメージに焼き付けられないため、最終生成物はキャッシュ外にコピーする
+# /tlmgr-pkgsにtlmgrのパッケージをバックアップして次回以降のビルド時に再利用する
 # package install
 RUN --mount=type=cache,target=/tlmgr-pkgs,sharing=locked \
     tlmgr restore --force --backupdir /tlmgr-pkgs --all || true && \
