@@ -67,7 +67,7 @@ jobs:
         with:
           path: |
             tlmgr-pkgs
-          key: cache-${{ hashFiles('Dockerfile') }}-${{ env.PLATFORM_PAIR }}
+          key: cache-tlmgr-pkgs-${{ env.PLATFORM_PAIR }}
 
       - name: inject cache into docker
         # v3.1.2のcommitを指定
