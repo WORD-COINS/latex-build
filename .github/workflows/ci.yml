@@ -31,8 +31,9 @@ jobs:
       - name: Install Docker and start Colima on macOS
         if: matrix.os == 'macos-latest'
         run: |
-          brew install docker
+          brew install docker --formula
           brew install colima
+          brew install qemu
           LIMACTL_PATH=$(brew --prefix)/bin/limactl
           sudo curl -L -o $LIMACTL_PATH https://github.com/mikekazakov/lima-nohvf/raw/master/limactl && sudo chmod +x $LIMACTL_PATH
           colima start --network-address --arch arm64 --vm-type=qemu
