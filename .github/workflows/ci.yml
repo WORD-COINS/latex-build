@@ -38,6 +38,11 @@ jobs:
           sudo curl -L -o $LIMACTL_PATH https://github.com/mikekazakov/lima-nohvf/raw/master/limactl && sudo chmod +x $LIMACTL_PATH
           colima start --network-address --arch arm64 --vm-type=qemu
 
+      - name: Install GNU tar on macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install gnu-tar
+
       - uses: actions/checkout@v4
 
       - name: Docker meta
