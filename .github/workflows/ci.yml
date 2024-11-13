@@ -41,8 +41,7 @@ jobs:
       - name: Use GNU tar on macOS
         if: matrix.os == 'macos-latest'
         run: |
-          ln -s $(brew --prefix)/bin/gtar /usr/bin/tar
-          tar --version
+          export PATH="$HOMEBREW_PREFIX/opt/gnu-tar/libexec/gnubin:$PATH"
 
       - uses: actions/checkout@v4
 
