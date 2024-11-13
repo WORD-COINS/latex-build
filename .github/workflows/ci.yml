@@ -55,13 +55,14 @@ jobs:
 
       - name: Get latest cache key
         id: cache-key
+        # 100MB以上かつ最も新しいキャッシュを取得
         run: |
-          LATEST_CACHE_KEY=$(gh cache list --key cache-pkgs-${{ env.PLATFORM_PAIR }}- --json key,sizeInBytes,createdAt --jq '.[] | select(.sizeInBytes >= 100*1024*1024) | .key' | sort -r | head -n 1)
+          LATEST_CACHE_KEY=$(gh cache list --key cache-pkgs-${{ env.PLATFORM_PAIR }}- --json key,sizeInBytes,createdAt --jq '.[] | select(.sizeInBytes >= 100*1024*1024) | .key' | head -n 1)
           echo "LATEST_CACHE_KEY=$LATEST_CACHE_KEY" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: latest cache key echo
+      - name: Echo latest cache key
         run: |
           echo $LATEST_CACHE_KEY
 
@@ -69,6 +70,7 @@ jobs:
         id: cache
         uses: actions/cache@v4
         with:
+          # keyに固定値を指定するとキャッシュがアップロードされないので、現在の日時を指定
           key: cache-pkgs-${{ env.PLATFORM_PAIR }}-${{ env.CURRENT_TIME }}
           restore-keys: ${{ env.LATEST_CACHE_KEY }}
           path: |
