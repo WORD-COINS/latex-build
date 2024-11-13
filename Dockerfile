@@ -80,10 +80,13 @@ ARG DEPS_FOR_TLMGR="latexmk collection-luatex collection-langjapanese \
 # /tlmgr-pkgsにtlmgrのパッケージをバックアップして次回以降のビルド時に再利用する
 # package install
 RUN --mount=type=cache,target=/tlmgr-pkgs,sharing=locked \
+    tlmgr list --only-installed | grep '^i ' | awk '{print $2}' | sed 's/:$//' > /tmp/installed-packages.txt && \
     tlmgr restore --force --backupdir /tlmgr-pkgs --all || true && \
     tlmgr install --no-persistent-downloads ${DEPS_FOR_TLMGR} && \
     tlmgr backup --clean --backupdir /tlmgr-pkgs --all && \
-    tlmgr backup ${DEPS_FOR_TLMGR} --backupdir /tlmgr-pkgs && \
+    tlmgr list --only-installed | grep '^i ' | awk '{print $2}' | sed 's/:$//' > /tmp/current_installed_packages.txt && \
+    bash -c 'comm -23 <(sort /tmp/current_installed_packages.txt) <(sort /tmp/installed-packages.txt) > /tmp/new_packages.txt' && \
+    tlmgr backup $(cat /tmp/new_packages.txt) --backupdir /tlmgr-pkgs && \
     tlmgr path add
 
 # EBGaramond
