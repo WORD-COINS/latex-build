@@ -43,6 +43,10 @@ jobs:
         run: |
           brew install gnu-tar
           echo "$HOMEBREW_PREFIX/opt/gnu-tar/libexec/gnubin" >> $GITHUB_PATH
+
+      - name: check GNU tar versions on macOS
+        if: matrix.os == 'macos-latest'
+        run: |
           tar --version
 
       - uses: actions/checkout@v4
