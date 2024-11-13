@@ -72,13 +72,15 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: tlmgr-pkgs Cache
+      - name: Package Cache
         uses: actions/cache@v4
         id: cache
         with:
           path: |
             tlmgr-pkgs
-          key: cache-tlmgr-pkgs-${{ env.PLATFORM_PAIR }}
+            var-cache-apt
+            var-lib-apt-lists
+          key: cache-pkgs-${{ env.PLATFORM_PAIR }}
 
       - name: inject cache into docker
         # v3.1.2のcommitを指定
@@ -86,7 +88,9 @@ jobs:
         with:
           cache-map: |
             {
-              "tlmgr-pkgs": "/tlmgr-pkgs"
+              "tlmgr-pkgs": "/tlmgr-pkgs",
+              "var-cache-apt": "/var/cache/apt",
+              "var-lib-apt-lists": "/var/lib/apt/lists"
             }
           skip-extraction: ${{ steps.cache.outputs.cache-hit }}
 

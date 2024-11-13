@@ -17,11 +17,14 @@ LABEL maintainer="Totsugekitai <37617413+Totsugekitai@users.noreply.github.com>"
 ENV PERSISTENT_DEPS="tzdata tar fontconfig unzip wget curl make perl ghostscript bash git groff less fonts-ebgaramond"
 
 # キャッシュ修正とパッケージインストールは同時にやる必要がある
-RUN apt-get update && \
+RUN rm -f /etc/apt/apt.conf.d/docker-clean && \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    $PERSISTENT_DEPS && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    $PERSISTENT_DEPS
 
 # install awscliv2
 RUN curl "https://awscli.amazonaws.com/awscli-exe-$AWS_CLI_ARCH.zip" -o "awscliv2.zip" && \
