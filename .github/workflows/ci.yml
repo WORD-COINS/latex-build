@@ -49,11 +49,16 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get current date
+        run: |
+          echo "CURRENT_TIME=$(date "+%Y-%m-%d-%H%M%S")" >> $GITHUB_ENV
+
       - name: Package Cache
         id: cache-primes-restore
         uses: actions/cache/restore@v4
         with:
-          key: cache-pkgs-${{ env.PLATFORM_PAIR }}
+          key: cache-pkgs-${{ env.PLATFORM_PAIR }}-${{ env.CURRENT_TIME }}
+          restore-keys: cache-pkgs-${{ env.PLATFORM_PAIR }}-
           path: |
             tlmgr-pkgs
             var-cache-apt
@@ -82,17 +87,6 @@ jobs:
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Always Save Primes
-        id: cache-primes-save
-        if: always() && steps.cache-primes-restore.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          key: ${{ steps.cache-primes-restore.outputs.cache-primary-key }}
-          path: |
-            tlmgr-pkgs
-            var-cache-apt
-            var-lib-apt-lists
 
       - name: Export digest
         run: |
