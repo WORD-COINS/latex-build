@@ -50,14 +50,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Package Cache
-        uses: actions/cache@v4
-        id: cache
+        id: cache-primes-restore
+        uses: actions/cache/restore@v4
         with:
+          key: cache-pkgs-${{ env.PLATFORM_PAIR }}
           path: |
             tlmgr-pkgs
             var-cache-apt
             var-lib-apt-lists
-          key: cache-pkgs-${{ env.PLATFORM_PAIR }}
 
       - name: inject cache into docker
         # v3.1.2のcommitを指定
@@ -82,6 +82,17 @@ jobs:
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Always Save Primes
+        id: cache-primes-save
+        if: always() && steps.cache-primes-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          key: ${{ steps.cache-primes-restore.outputs.cache-primary-key }}
+          path: |
+            tlmgr-pkgs
+            var-cache-apt
+            var-lib-apt-lists
 
       - name: Export digest
         run: |
