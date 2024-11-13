@@ -51,7 +51,7 @@ jobs:
 
       - name: Get current date
         run: |
-          echo "CURRENT_TIME=$(date "+%Y-%m-%d-%H%M%S")" >> $GITHUB_ENV
+          echo "CURRENT_TIME=$(TZ=Asia/Tokyo date "+%Y-%m-%d-%H%M%S")" >> $GITHUB_ENV
 
       - name: Package Cache
         id: cache
