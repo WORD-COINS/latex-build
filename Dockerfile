@@ -2,24 +2,30 @@ FROM ubuntu:noble AS base
 ARG TARGETARCH
 
 FROM base AS build-arm64
-ENV AWS_CLI_ARCH=linux-aarch64
-ENV TEX_LIVE_ARCH=aarch64-linux
+ARG AWS_CLI_ARCH=linux-aarch64
+ARG TEX_LIVE_ARCH=aarch64-linux
 
 FROM base AS build-amd64
-ENV AWS_CLI_ARCH=linux-x86_64
-ENV TEX_LIVE_ARCH=x86_64-linux
+ARG AWS_CLI_ARCH=linux-x86_64
+ARG TEX_LIVE_ARCH=x86_64-linux
 
 FROM build-${TARGETARCH}
 
 # WORD内部向けコンテナなので、何か問題が有ったらSlack上で通知して下さい。
 LABEL maintainer="Totsugekitai <37617413+Totsugekitai@users.noreply.github.com>"
 
-ENV PERSISTENT_DEPS="tar fontconfig unzip wget curl make perl ghostscript bash git groff less fonts-ebgaramond"
+ARG PERSISTENT_DEPS="ca-certificates tzdata tar fontconfig unzip wget curl \
+      make perl ghostscript bash git groff less fonts-ebgaramond"
 
 # キャッシュ修正とパッケージインストールは同時にやる必要がある
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    tzdata $PERSISTENT_DEPS
+RUN rm -f /etc/apt/apt.conf.d/docker-clean && \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+    $PERSISTENT_DEPS
 
 # install awscliv2
 RUN curl "https://awscli.amazonaws.com/awscli-exe-$AWS_CLI_ARCH.zip" -o "awscliv2.zip" && \
@@ -27,10 +33,10 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-$AWS_CLI_ARCH.zip" -o "awscliv
     ./aws/install && \
     rm -r ./aws awscliv2.zip
 
-ENV FONT_URLS="https://github.com/adobe-fonts/source-code-pro/archive/2.030R-ro/1.050R-it.zip \
+ARG FONT_URLS="https://github.com/adobe-fonts/source-code-pro/archive/2.030R-ro/1.050R-it.zip \
       https://github.com/adobe-fonts/source-han-sans/releases/latest/download/SourceHanSansJP.zip \
       https://github.com/adobe-fonts/source-han-serif/raw/release/SubsetOTF/SourceHanSerifJP.zip"
-ENV FONT_PATH="/usr/share/fonts/"
+ARG FONT_PATH="/usr/share/fonts/"
 RUN mkdir -p $FONT_PATH && \
     wget $FONT_URLS && \
     unzip -j "*.zip" "*.otf" -d $FONT_PATH && \
@@ -65,14 +71,22 @@ RUN echo "Set PATH to $PATH" && \
 # tlmgr section
 RUN tlmgr update --self
 
-# package install
-RUN tlmgr install --no-persistent-downloads \
-      latexmk collection-luatex collection-langjapanese \
+ARG DEPS_FOR_TLMGR="latexmk collection-luatex collection-langjapanese \
       collection-fontsrecommended type1cm mdframed needspace newtx \
-      fontaxes boondox everyhook svn-prov framed subfiles titlesec \
-      tocdata xpatch etoolbox l3packages \
+      fontaxes boondox everyhook svn-prov framed subfiles titlesec tocdata \
       biblatex pbibtex-base logreq biber import environ trimspaces tcolorbox \
-      ebgaramond algorithms algorithmicx xstring siunitx bussproofs enumitem && \
+      ebgaramond algorithms algorithmicx xstring siunitx bussproofs enumitem"
+
+# /tlmgr-pkgsにtlmgrのパッケージをバックアップして次回以降のビルド時に再利用する
+# package install
+RUN --mount=type=cache,target=/tlmgr-pkgs,sharing=locked \
+    tlmgr list --only-installed | grep '^i ' | awk '{print $2}' | sed 's/:$//' > /tmp/installed-packages.txt && \
+    tlmgr restore --force --backupdir /tlmgr-pkgs --all || true && \
+    tlmgr install --no-persistent-downloads ${DEPS_FOR_TLMGR} && \
+    tlmgr backup --clean --backupdir /tlmgr-pkgs --all && \
+    tlmgr list --only-installed | grep '^i ' | awk '{print $2}' | sed 's/:$//' > /tmp/current_installed_packages.txt && \
+    bash -c 'comm -23 <(sort /tmp/current_installed_packages.txt) <(sort /tmp/installed-packages.txt) > /tmp/new_packages.txt' && \
+    tlmgr backup $(cat /tmp/new_packages.txt) --backupdir /tlmgr-pkgs && \
     tlmgr path add
 
 # EBGaramond
@@ -81,9 +95,9 @@ RUN cp /usr/share/fonts/opentype/ebgaramond/EBGaramond12-Regular.otf "/usr/share
     luaotfload-tool --update
 
 # Install Pandoc
-ENV PANDOC_VERSION="3.5"
-ENV PANDOC_DOWNLOAD_URL="https://github.com/jgm/pandoc/releases/download/$PANDOC_VERSION/pandoc-$PANDOC_VERSION-linux-$TARGETARCH.tar.gz"
-ENV PANDOC_ROOT="/usr/local/bin/pandoc"
+ARG PANDOC_VERSION="3.5"
+ARG PANDOC_DOWNLOAD_URL="https://github.com/jgm/pandoc/releases/download/$PANDOC_VERSION/pandoc-$PANDOC_VERSION-linux-$TARGETARCH.tar.gz"
+ARG PANDOC_ROOT="/usr/local/bin/pandoc"
 RUN wget -qO- "$PANDOC_DOWNLOAD_URL" | tar -xzf - && \
     cp pandoc-$PANDOC_VERSION/bin/pandoc $PANDOC_ROOT && \
     rm -Rf pandoc-$PANDOC_VERSION/

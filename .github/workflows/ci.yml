@@ -15,27 +15,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            platform: linux/amd64
-          - os: macos-latest
-            platform: linux/arm64
-    runs-on: ${{ matrix.os }}
+        platform:
+          - linux/amd64
+          - linux/arm64
+    runs-on: ubuntu-latest
     steps:
       - name: Prepare
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
           echo "REGISTRY_IMAGE=`echo ghcr.io/${{github.repository}} | tr '[:upper:]' '[:lower:]'`" >> ${GITHUB_ENV}
-
-      - name: Install Docker and start Colima on macOS
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew install docker
-          brew install colima
-          LIMACTL_PATH=$(brew --prefix)/bin/limactl
-          sudo curl -L -o $LIMACTL_PATH https://github.com/mikekazakov/lima-nohvf/raw/master/limactl && sudo chmod +x $LIMACTL_PATH
-          colima start --network-address --arch arm64 --vm-type=qemu
 
       - uses: actions/checkout@v4
 
@@ -60,6 +49,47 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get current date
+        run: |
+          echo "CURRENT_TIME=$(TZ=Asia/Tokyo date "+%Y-%m-%d-%H%M%S")" >> $GITHUB_ENV
+
+      - name: Get latest cache key
+        id: cache-key
+        # 100MB以上かつ最も新しいキャッシュを取得
+        run: |
+          LATEST_CACHE_KEY=$(gh cache list --key cache-pkgs-${{ env.PLATFORM_PAIR }}- --json key,sizeInBytes,createdAt --jq '.[] | select(.sizeInBytes >= 100*1024*1024) | .key' | head -n 1)
+          echo "LATEST_CACHE_KEY=$LATEST_CACHE_KEY" >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Echo latest cache key
+        run: |
+          echo $LATEST_CACHE_KEY
+
+      - name: Package Cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          # keyに固定値を指定するとキャッシュがアップロードされないので、現在の日時を指定
+          key: cache-pkgs-${{ env.PLATFORM_PAIR }}-${{ env.CURRENT_TIME }}
+          restore-keys: ${{ env.LATEST_CACHE_KEY }}
+          path: |
+            tlmgr-pkgs
+            var-cache-apt
+            var-lib-apt-lists
+
+      - name: inject cache into docker
+        # v3.1.2のcommitを指定
+        uses: reproducible-containers/buildkit-cache-dance@5b6db76d1da5c8b307d5d2e0706d266521b710de
+        with:
+          cache-map: |
+            {
+              "tlmgr-pkgs": "/tlmgr-pkgs",
+              "var-cache-apt": "/var/cache/apt",
+              "var-lib-apt-lists": "/var/lib/apt/lists"
+            }
+          skip-extraction: false
+
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@v6
@@ -69,8 +99,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=platform-${{ env.PLATFORM_PAIR }}
+          cache-to: type=gha,mode=max,scope=platform-${{ env.PLATFORM_PAIR }}
 
       - name: Export digest
         run: |
