@@ -123,7 +123,7 @@ jobs:
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: digests-${{ env.PLATFORM_PAIR }}
           path: /tmp/digests/*
@@ -141,7 +141,7 @@ jobs:
           echo "REGISTRY_IMAGE=`echo ghcr.io/${{github.repository}} | tr '[:upper:]' '[:lower:]'`" >> ${GITHUB_ENV}
 
       - name: Download digests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: /tmp/digests
           pattern: digests-*
